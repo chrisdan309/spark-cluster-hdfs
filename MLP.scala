@@ -61,8 +61,8 @@ println(f"Accuracy: $accuracy%.4f")
 println(f"Recall: $recall%.4f")
 println(f"F1-score: $f1%.4f")
 
-val loss = 1.0 - accuracy
-println(f"Loss (1 - accuracy): $loss%.4f")
+val loss = 1.0 - (accuracy)
+println(f"Loss (1 - accuracy): $loss%.4f") 
 
 
 println("\n====== Clasificación con Multilayer Perceptron ======")
