@@ -67,5 +67,33 @@ println(f"Loss (1 - accuracy): $loss%.4f")
 
 println("\n====== Clasificación con Multilayer Perceptron ======")
 predictions.select("features", "label", "prediction").show(10, truncate = false)
+import java.io._
+import org.apache.spark.ml.linalg.Vector
+import spark.implicits._
 
-spark.stop()
+// Guardar métricas en archivo de texto
+val pw = new PrintWriter(new File("resultados_mlp.txt"))
+pw.write(f"Accuracy: $accuracy%.4f\n")
+pw.write(f"Recall: $recall%.4f\n")
+pw.write(f"F1-score: $f1%.4f\n")
+pw.write(f"Loss (1 - accuracy): $loss%.4f\n")
+pw.close()
+
+// Convertir features (Vector) a columnas escalares, con casteo seguro
+val predFlat = predictions.select("features", "label", "prediction")
+  .map { row =>
+    val vec = row.getAs[Vector]("features").toArray.map(_.toString.toDouble)
+    val label = row.getAs[Any]("label").toString.toDouble
+    val prediction = row.getAs[Any]("prediction").toString.toDouble
+    (vec(0), vec(1), vec(2), label, prediction)
+  }.toDF("SIEMBRA", "VERDE_ACTUAL", "PRECIO_CHACRA", "label", "prediction")
+
+predFlat
+  .coalesce(1) // opcional: un solo CSV
+  .write
+  .option("header", "true")
+  .mode("overwrite")
+  .csv("predicciones_mlp.csv")
+
+println("\n====== Clasificación con Multilayer Perceptron ======")
+predFlat.show(10, truncate = false)
