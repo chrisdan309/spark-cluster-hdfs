@@ -3,6 +3,8 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
 import org.apache.spark.ml.feature.VectorAssembler
 
+val inicio = System.nanoTime() // 🔹 MARCAR INICIO
+
 val spark = SparkSession.builder()
   .appName("ClasificacionAgricolaMLP")
 // .master("spark://namenode:7077")
@@ -56,17 +58,16 @@ val evaluatorF1 = new MulticlassClassificationEvaluator()
 val accuracy = evaluatorAcc.evaluate(predictions)
 val recall = evaluatorRecall.evaluate(predictions)
 val f1 = evaluatorF1.evaluate(predictions)
+val loss = 1.0 - accuracy
 
 println(f"Accuracy: $accuracy%.4f")
 println(f"Recall: $recall%.4f")
 println(f"F1-score: $f1%.4f")
-
-val loss = 1.0 - (accuracy)
-println(f"Loss (1 - accuracy): $loss%.4f") 
-
+println(f"Loss (1 - accuracy): $loss%.4f")
 
 println("\n====== Clasificación con Multilayer Perceptron ======")
 predictions.select("features", "label", "prediction").show(10, truncate = false)
+
 import java.io._
 import org.apache.spark.ml.linalg.Vector
 import spark.implicits._
@@ -79,7 +80,7 @@ pw.write(f"F1-score: $f1%.4f\n")
 pw.write(f"Loss (1 - accuracy): $loss%.4f\n")
 pw.close()
 
-// Convertir features (Vector) a columnas escalares, con casteo seguro
+// Convertir features (Vector) a columnas escalares
 val predFlat = predictions.select("features", "label", "prediction")
   .map { row =>
     val vec = row.getAs[Vector]("features").toArray.map(_.toString.toDouble)
@@ -89,11 +90,17 @@ val predFlat = predictions.select("features", "label", "prediction")
   }.toDF("SIEMBRA", "VERDE_ACTUAL", "PRECIO_CHACRA", "label", "prediction")
 
 predFlat
-  .coalesce(1) // opcional: un solo CSV
+  .coalesce(1)
   .write
   .option("header", "true")
   .mode("overwrite")
   .csv("predicciones_mlp.csv")
 
-println("\n====== Clasificación con Multilayer Perceptron ======")
 predFlat.show(10, truncate = false)
+
+// 🔹 MEDIR TIEMPO FINAL Y MOSTRARLO
+val fin = System.nanoTime()
+val duracionSeg = (fin - inicio) / 1e9d
+println(f"\n⏱ Tiempo total de ejecución: $duracionSeg%.2f segundos")
+
+spark.stop()

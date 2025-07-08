@@ -1,0 +1,3 @@
+====== Regresión con Árbol de Decisión ======
+[RMSE]: 0.9814
+⏱ Tiempo total de ejecución: 18.54 segundos
