@@ -36,6 +36,35 @@ val mlp = new MultilayerPerceptronClassifier()
 val model = mlp.fit(prepared)
 val predictions = model.transform(prepared)
 
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+
+val evaluatorAcc = new MulticlassClassificationEvaluator()
+  .setLabelCol("label")
+  .setPredictionCol("prediction")
+  .setMetricName("accuracy")
+
+val evaluatorRecall = new MulticlassClassificationEvaluator()
+  .setLabelCol("label")
+  .setPredictionCol("prediction")
+  .setMetricName("weightedRecall")
+
+val evaluatorF1 = new MulticlassClassificationEvaluator()
+  .setLabelCol("label")
+  .setPredictionCol("prediction")
+  .setMetricName("f1")
+
+val accuracy = evaluatorAcc.evaluate(predictions)
+val recall = evaluatorRecall.evaluate(predictions)
+val f1 = evaluatorF1.evaluate(predictions)
+
+println(f"Accuracy: $accuracy%.4f")
+println(f"Recall: $recall%.4f")
+println(f"F1-score: $f1%.4f")
+
+val loss = 1.0 - accuracy
+println(f"Loss (1 - accuracy): $loss%.4f")
+
+
 println("\n====== Clasificación con Multilayer Perceptron ======")
 predictions.select("features", "label", "prediction").show(10, truncate = false)
 
